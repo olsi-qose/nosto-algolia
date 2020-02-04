@@ -54,54 +54,5 @@
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.8.0/dist/instantsearch.min.js"></script>
     <script src="src/app.js"></script>
-    <script>
-        const mappingFilters = {
-            top_brands: "brand",
-            top_categories: "product_type"
-        };
-
-        const nostoDataToOptionalFilters = data =>
-            Object.keys(data).reduce(
-                (acc1, key1) => [
-                    ...acc1,
-                    ...Object.keys(data[key1]).reduce(
-                        (acc2, key2) => [
-                            ...acc2,
-                            `${mappingFilters[key1]}:${key2}<score=${Math.round(
-                                data[key1][key2] * 1000
-                            )}>`
-                        ],
-                        []
-                    )
-                ],
-                []
-            );
-
-        nostojs(api =>
-            api.listen("prerender", data => {
-                let myOptionalFilters = nostoDataToOptionalFilters(data.affinityScores)
-                console.log("Affinity",data.affinityScores)
-                console.log("Samples",samples)
-
-                const search = instantsearch({
-                    appId: "B1G2GM9NG0",
-                    apiKey: "aadef574be1f9252bb48d4ea09b5cfe5",
-                    indexName: "demo_ecommerce",
-                    searchParameters: {
-                        hitsPerPage: 50,
-                        attributesToSnippet: ["description:24"],
-                        snippetEllipsisText: " [...]"
-                    },
-                    // Override the search function to update the optional filters before each search
-                    searchFunction(helper) {
-                        helper.setQueryParameter("optionalFilters", myOptionalFilters).search();
-                    }
-                });
-                search.start();
-            })
-        );
-
-        nostojs(api => api.loadRecommendations());
-    </script>
   </body>
 </html>
