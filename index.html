@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta name="theme-color" content="#000000" />
+    <title>Algolia InstantSearch | E-commerce demo</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.7.1/dist/instantsearch.min.css"
+    />
+    <link rel="stylesheet" type="text/css" href="src/app.css" />
+    <script type="text/javascript">
+        (function(){var name="nostojs";window[name]=window[name]||function(cb){(window[name].q=window[name].q||[]).push(cb);};})();
+        nostojs(api => api.setAutoLoad(false));
+    </script>
+    <script>
+        setCookie("2c.cId", "5e14b41960b2ff6e641c5510", 20)
+        function setCookie(cname, cvalue, exdays) {
+            var d = new Date();
+            d.setTime(d.getTime() + (exdays*24*60*60*1000));
+            var expires = "expires="+ d.toUTCString();
+            document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+        }
+    </script>
+    <script src="//connect.staging.nosto.com/include/magento-b3e1aa27" async></script>
+
+  </head>
+
+  <body>
+  <div class="nosto_element" id="frontpage-nosto-1"></div>
+    <main class="search-container">
+      <div class="left-panel">
+        <div id="categories"></div>
+        <div id="brands"></div>
+        <div id="price"></div>
+      </div>
+      <div class="right-panel">
+        <div id="searchbox"></div>
+        <div id="stats"></div>
+        <div id="hits"></div>
+        <div id="pagination"></div>
+      </div>
+    </main>
+    <footer>
+      Source Code on
+      <a href="https://github.com/algolia/doc-onboarding">GitHub</a> | Powered
+      by
+      <a href="https://www.algolia.com">Algolia</a>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.8.0/dist/instantsearch.min.js"></script>
+    <script src="src/app.js"></script>
+    <script>
+        const mappingFilters = {
+            top_brands: "brand",
+            top_categories: "product_type"
+        };
+
+        const nostoDataToOptionalFilters = data =>
+            Object.keys(data).reduce(
+                (acc1, key1) => [
+                    ...acc1,
+                    ...Object.keys(data[key1]).reduce(
+                        (acc2, key2) => [
+                            ...acc2,
+                            `${mappingFilters[key1]}:${key2}<score=${Math.round(
+                                data[key1][key2] * 1000
+                            )}>`
+                        ],
+                        []
+                    )
+                ],
+                []
+            );
+
+        nostojs(api =>
+            api.listen("prerender", data => {
+                let myOptionalFilters = nostoDataToOptionalFilters(data.affinityScores)
+                console.log("Affinity",data.affinityScores)
+                console.log("Samples",samples)
+
+                const search = instantsearch({
+                    appId: "B1G2GM9NG0",
+                    apiKey: "aadef574be1f9252bb48d4ea09b5cfe5",
+                    indexName: "demo_ecommerce",
+                    searchParameters: {
+                        hitsPerPage: 50,
+                        attributesToSnippet: ["description:24"],
+                        snippetEllipsisText: " [...]"
+                    },
+                    // Override the search function to update the optional filters before each search
+                    searchFunction(helper) {
+                        helper.setQueryParameter("optionalFilters", myOptionalFilters).search();
+                    }
+                });
+                search.start();
+            })
+        );
+
+        nostojs(api => api.loadRecommendations());
+    </script>
+  </body>
+</html>
