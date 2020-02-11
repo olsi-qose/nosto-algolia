@@ -33,15 +33,24 @@ const nostoDataToOptionalFilters = data =>
       []
     );
 
-nostojs(api =>
-    api.listen("prerender", data => {
-        let myOptionalFilters = nostoDataToOptionalFilters(data.affinityScores)
-        algoliaSearch(myOptionalFilters)
-    })
-);
 
-nostojs(api => api.loadRecommendations());
 
+function integrate(fn) {
+    try {
+        nostojs(api =>
+            api.listen("prerender", data => {
+                let myOptionalFilters = nostoDataToOptionalFilters(data.affinityScores)
+                fn(myOptionalFilters);
+            })
+        );
+        nostojs(api => api.loadRecommendations())
+    } catch {
+        fn([])
+    }    
+}
+
+
+integrate(data => algoliaSearch(data))
 
 
 function algoliaSearch(optionalFilters) {
