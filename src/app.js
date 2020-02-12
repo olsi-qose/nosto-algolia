@@ -1,6 +1,7 @@
 /* global instantsearch */
 
 import { hitTemplate } from "./helpers";
+import {getNostoAffinityData} from "./nosto";
 
 let sample = {
   "top_brands":{
@@ -10,48 +11,12 @@ let sample = {
   }
 };
 
-const mappingFilters = {
-  top_brands: "brand",
-  top_categories: "product_type"
-};
-
-
-const nostoDataToOptionalFilters = data =>
-    Object.keys(data).reduce(
-      (acc1, key1) => [
-        ...acc1,
-        ...Object.keys(data[key1]).reduce(
-          (acc2, key2) => [
-            ...acc2,
-            `${mappingFilters[key1]}:${key2}<score=${Math.round(
-              data[key1][key2] * 1000
-            )}>`
-          ],
-          []
-        )
-      ],
-      []
-    );
-
-
-
-function integrate(fn) {
-    try {
-        nostojs(api =>
-            api.listen("prerender", data => {
-                let myOptionalFilters = nostoDataToOptionalFilters(data.affinityScores)
-                fn(myOptionalFilters);
-            })
-        );
-        nostojs(api => api.loadRecommendations())
-    } catch {
-        fn([])
-    }    
-}
-
-
-integrate(data => algoliaSearch(data))
-
+getNostoAffinityData()
+    .then(data => algoliaSearch(data))
+    .catch(error => {
+        console.warn("Could not retrieve data from Nosto");
+        algoliaSearch();
+    })
 
 function algoliaSearch(optionalFilters) {
     const search = instantsearch({
